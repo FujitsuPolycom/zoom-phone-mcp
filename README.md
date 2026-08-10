@@ -1,10 +1,10 @@
 # Zoom Phone MCP Server
 
-A standalone [Model Context Protocol](https://modelcontextprotocol.io/) server for **Zoom Phone** — the first and only MCP server providing full coverage of the Zoom Phone API.
+A standalone [Model Context Protocol](https://modelcontextprotocol.io/) server for **Zoom Phone**.
 
 ## What This Does
 
-Zoom Phone's REST API has 200+ endpoints for managing telephony: auto receptionists, IVR menus, call queues, voicemail, greetings, audio library, call routing, devices, SMS, and more. **Zoom's official MCP servers don't cover Phone at all** — they only handle Meetings, Chat, Whiteboard, Tasks, and Canvas. This project fills that gap.
+Zoom Phone's REST API has 200+ endpoints for managing telephony: auto receptionists, IVR menus, call queues, voicemail, greetings, audio library, call routing, devices, SMS, and more. Zoom's official MCP servers only handle Meetings, Chat, Whiteboard, Tasks, and Canvas — not Phone.
 
 ## Features
 
@@ -25,7 +25,7 @@ Zoom Phone's REST API has 200+ endpoints for managing telephony: auto receptioni
 | **SMS & Recordings** | 7 | Send SMS, list sessions, get messages, list/download recordings |
 | **Reports** | 4 | Call charges, fax charges, operation logs, SMS charges |
 
-**Total: 117 tools** covering the full Zoom Phone API surface.
+**Total: 117 tools** across the Zoom Phone API.
 
 ## Quick Start
 
@@ -175,4 +175,4 @@ MIT — see [LICENSE](LICENSE)
 
 ## Contributing
 
-PRs welcome! This is an open-source project aiming to be the definitive MCP server for Zoom Phone.
+PRs welcome.
