@@ -1,0 +1,13 @@
+services:
+  zoom-phone-mcp:
+    build: .
+    container_name: zoom-phone-mcp
+    restart: unless-stopped
+    ports:
+      - "8767:8767"
+    environment:
+      - ZOOM_ACCOUNT_ID=${ZOOM_ACCOUNT_ID}
+      - ZOOM_CLIENT_ID=${ZOOM_CLIENT_ID}
+      - ZOOM_CLIENT_SECRET=${ZOOM_CLIENT_SECRET}
+      - ZOOM_PHONE_MCP_HOST=0.0.0.0
+      - ZOOM_PHONE_MCP_PORT=8767
