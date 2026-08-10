@@ -22,7 +22,7 @@ def register(
     """
 
     @mcp.tool()
-    def list_phone_numbers(
+    async def list_phone_numbers(
         type: str | None = None,
         page_size: int | None = 100,
         next_page_token: str | None = None,
@@ -50,13 +50,13 @@ def register(
                 params["page_size"] = page_size
             if next_page_token is not None:
                 params["next_page_token"] = next_page_token
-            data = client.get("/phone/numbers", params=params)
+            data = await client.get("/phone/numbers", params=params)
             return json_result(data)
         except Exception as err:
             return error_result(err)
 
     @mcp.tool()
-    def get_phone_number(
+    async def get_phone_number(
         phone_number_id: str,
     ) -> str:
         """Retrieve details for a specific phone number.
@@ -72,13 +72,13 @@ def register(
         """
         try:
             client = get_client()
-            data = client.get(f"/phone/numbers/{phone_number_id}")
+            data = await client.get(f"/phone/numbers/{phone_number_id}")
             return json_result(data)
         except Exception as err:
             return error_result(err)
 
     @mcp.tool()
-    def update_phone_number(
+    async def update_phone_number(
         phone_number_id: str,
         phone_number_settings: dict,
     ) -> str:
@@ -98,7 +98,7 @@ def register(
         """
         try:
             client = get_client()
-            data = client.patch(
+            data = await client.patch(
                 f"/phone/numbers/{phone_number_id}",
                 json=phone_number_settings,
             )
@@ -107,7 +107,7 @@ def register(
             return error_result(err)
 
     @mcp.tool()
-    def unassign_phone_number_from_user(
+    async def unassign_phone_number_from_user(
         user_id: str,
         phone_number_id: str,
     ) -> str:
@@ -125,7 +125,7 @@ def register(
         """
         try:
             client = get_client()
-            data = client.delete(
+            data = await client.delete(
                 f"/phone/users/{user_id}/phone_numbers/{phone_number_id}"
             )
             return json_result(data)
@@ -133,7 +133,7 @@ def register(
             return error_result(err)
 
     @mcp.tool()
-    def list_calling_plans() -> str:
+    async def list_calling_plans() -> str:
         """List all available calling plans for the Zoom Phone account.
 
         Retrieves the full set of calling plans that can be assigned to users
@@ -144,7 +144,7 @@ def register(
         """
         try:
             client = get_client()
-            data = client.get("/phone/calling_plans")
+            data = await client.get("/phone/calling_plans")
             return json_result(data)
         except Exception as err:
             return error_result(err)

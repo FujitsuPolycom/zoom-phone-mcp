@@ -12,7 +12,7 @@ def register(mcp: Any, get_client: Any, json_result: Any, error_result: Any) -> 
     """Register all Zoom Phone audio-library tools with the MCP server."""
 
     @mcp.tool()
-    def list_audio_items(
+    async def list_audio_items(
         user_id: str,
         page_size: int | None = None,
         next_page_token: str | None = None,
@@ -38,13 +38,13 @@ def register(mcp: Any, get_client: Any, json_result: Any, error_result: Any) -> 
             if next_page_token is not None:
                 params["next_page_token"] = next_page_token
 
-            data = client.get(f"/phone/users/{user_id}/audios", params=params)
+            data = await client.get(f"/phone/users/{user_id}/audios", params=params)
             return json_result(data)
         except Exception as err:
             return error_result(err)
 
     @mcp.tool()
-    def get_audio_item(audio_id: str) -> str:
+    async def get_audio_item(audio_id: str) -> str:
         """Retrieve a single audio library item by its ID.
 
         Fetches the details of a specific audio item from the Zoom Phone
@@ -58,13 +58,13 @@ def register(mcp: Any, get_client: Any, json_result: Any, error_result: Any) -> 
         """
         try:
             client = get_client()
-            data = client.get(f"/phone/audios/{audio_id}")
+            data = await client.get(f"/phone/audios/{audio_id}")
             return json_result(data)
         except Exception as err:
             return error_result(err)
 
     @mcp.tool()
-    def add_audio_item(
+    async def add_audio_item(
         user_id: str,
         name: str,
         text: str,
@@ -95,13 +95,13 @@ def register(mcp: Any, get_client: Any, json_result: Any, error_result: Any) -> 
             if voice_language is not None:
                 body["voice_language"] = voice_language
 
-            data = client.post(f"/phone/users/{user_id}/audios", json_body=body)
+            data = await client.post(f"/phone/users/{user_id}/audios", json=body)
             return json_result(data)
         except Exception as err:
             return error_result(err)
 
     @mcp.tool()
-    def add_audio_items_batch(
+    async def add_audio_items_batch(
         user_id: str,
         audio_items: list[dict],
     ) -> str:
@@ -124,15 +124,15 @@ def register(mcp: Any, get_client: Any, json_result: Any, error_result: Any) -> 
             client = get_client()
             body: dict[str, Any] = {"audio_items": audio_items}
 
-            data = client.post(
-                f"/phone/users/{user_id}/audios/batch", json_body=body
+            data = await client.post(
+                f"/phone/users/{user_id}/audios/batch", json=body
             )
             return json_result(data)
         except Exception as err:
             return error_result(err)
 
     @mcp.tool()
-    def update_audio_item(
+    async def update_audio_item(
         audio_id: str,
         name: str | None = None,
         text: str | None = None,
@@ -158,13 +158,13 @@ def register(mcp: Any, get_client: Any, json_result: Any, error_result: Any) -> 
             if text is not None:
                 body["text"] = text
 
-            data = client.patch(f"/phone/audios/{audio_id}", json_body=body)
+            data = await client.patch(f"/phone/audios/{audio_id}", json=body)
             return json_result(data)
         except Exception as err:
             return error_result(err)
 
     @mcp.tool()
-    def delete_audio_item(audio_id: str) -> str:
+    async def delete_audio_item(audio_id: str) -> str:
         """Delete an audio library item.
 
         Permanently removes the specified audio item from the Zoom Phone
@@ -178,7 +178,7 @@ def register(mcp: Any, get_client: Any, json_result: Any, error_result: Any) -> 
         """
         try:
             client = get_client()
-            data = client.delete(f"/phone/audios/{audio_id}")
+            data = await client.delete(f"/phone/audios/{audio_id}")
             return json_result(data)
         except Exception as err:
             return error_result(err)
