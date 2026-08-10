@@ -6,7 +6,7 @@ import os
 from contextlib import asynccontextmanager
 from typing import Any
 
-from mcp.server.mcpserver import MCPServer
+from mcp.server.fastmcp import FastMCP
 from mcp.server.transport_security import TransportSecuritySettings
 
 from .auth import ZoomAuth
@@ -27,7 +27,7 @@ def get_client() -> ZoomPhoneClient:
 
 
 @asynccontextmanager
-async def app_lifespan(server: MCPServer):
+async def app_lifespan(server: FastMCP):
     """Manage ZoomAuth + ZoomPhoneClient lifecycle."""
     global _auth, _client
     logger.info("Starting Zoom Phone MCP server...")
@@ -41,9 +41,12 @@ async def app_lifespan(server: MCPServer):
         logger.info("Zoom Phone MCP server stopped.")
 
 
-mcp = MCPServer(
+mcp = FastMCP(
     "zoom-phone",
     lifespan=app_lifespan,
+    transport_security=TransportSecuritySettings(
+        enable_dns_rebinding_protection=False,
+    ),
 )
 
 
@@ -117,11 +120,7 @@ def main():
     import uvicorn
     host = os.environ.get("ZOOM_PHONE_MCP_HOST", "0.0.0.0")
     port = int(os.environ.get("ZOOM_PHONE_MCP_PORT", "8767"))
-    app = mcp.streamable_http_app(
-        transport_security=TransportSecuritySettings(
-            enable_dns_rebinding_protection=False,
-        ),
-    )
+    app = mcp.streamable_http_app()
     logger.info("Launching Zoom Phone MCP on %s:%d", host, port)
     uvicorn.run(app, host=host, port=port, log_level="info")
 
