@@ -27,6 +27,19 @@ class ZoomPhoneClient:
         self.auth = auth
         self._client: httpx.AsyncClient | None = None
 
+    async def _ensure_client(self) -> httpx.AsyncClient:
+        if self._client is None:
+            self._client = httpx.AsyncClient(
+                base_url=API_BASE,
+                timeout=httpx.Timeout(30.0, connect=10.0),
+            )
+        return self._client
+
+    async def close(self):
+        if self._client:
+            await self._client.aclose()
+            self._client = None
+
     async def __aenter__(self):
         self._client = httpx.AsyncClient(
             base_url=API_BASE,
@@ -52,7 +65,7 @@ class ZoomPhoneClient:
         json: dict | None = None,
     ) -> Any:
         if not self._client:
-            raise RuntimeError("Client not initialized. Use 'async with ZoomPhoneClient(auth) as client:'")
+            self._client = await self._ensure_client()
 
         headers = await self._headers()
         resp = await self._client.request(method, path, params=params, json=json, headers=headers)

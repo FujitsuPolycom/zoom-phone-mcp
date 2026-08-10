@@ -37,7 +37,7 @@ async def app_lifespan(server: FastMCP):
         yield
     finally:
         if _client:
-            await _client.__aexit__(None, None, None)
+            await _client.close()
         logger.info("Zoom Phone MCP server stopped.")
 
 
