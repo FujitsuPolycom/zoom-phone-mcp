@@ -115,7 +115,25 @@ phone:read:admin
 phone:write:admin
 ```
 
-These two legacy scopes grant read/write access to the entire Phone API. Simplest setup, maximum access.
+These two legacy scopes grant read/write access to most of the Phone API. However, Zoom requires additional granular scopes for certain call handling and settings sub-resources, even when the legacy admin scopes are present. To ensure **every** tool works, add these granular scopes as well:
+
+<details>
+<summary>Additional granular scopes needed for full coverage (click to expand)</summary>
+
+```
+phone:read:auto_receptionist_call_handling_setting:admin
+phone:read:auto_receptionist_setting:admin
+phone:read:call_queue_call_handling_setting:admin
+phone:read:call_queue_setting:admin
+phone:read:call_queue_policy:admin
+phone:read:call_queue_custom_group:admin
+phone:read:user_call_handling_setting:admin
+phone:read:common_area_call_handling_setting:admin
+```
+
+</details>
+
+Without these, list/get calls for auto receptionist settings, call queue settings/policies/custom groups, user call handling, and common area call handling will return `Insicient scope` errors. All other tools work with just the two legacy scopes.
 
 #### Read-Only (all list/get tools, no create/update/delete)
 
