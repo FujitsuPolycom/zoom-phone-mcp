@@ -31,7 +31,7 @@ Zoom Phone's REST API has 200+ endpoints for managing telephony: auto receptioni
 
 ### Prerequisites
 
-- A Zoom account with a [Server-to-Server OAuth app](https://developers.zoom.us/docs/integrations/oauth/#server-to-server-oauth/) that has Zoom Phone scopes (`phone:read:admin`, `phone:write:admin`)
+- A Zoom account with a [Server-to-Server OAuth app](https://developers.zoom.us/docs/integrations/oauth/#server-to-server-oauth/) that has Zoom Phone scopes — see [Scope Profiles](#scope-profiles) below for options
 - Python 3.11+ or Docker
 
 ### Option 1: Docker (recommended)
@@ -99,10 +99,202 @@ hermes mcp test zoom-phone
 This server uses Zoom's **Server-to-Server OAuth** flow (no user interaction needed). You need:
 
 1. A Server-to-Server OAuth app on the [Zoom App Marketplace](https://marketplace.zoom.us/)
-2. Scopes: `phone:read:admin` and `phone:write:admin` (add granular scopes as needed)
-3. The app's Account ID, Client ID, and Client Secret
+2. The app's Account ID, Client ID, and Client Secret
+3. Phone scopes assigned to the app (see below)
 
 The server automatically fetches and refreshes access tokens (1-hour expiry).
+
+### Scope Profiles
+
+Zoom supports [granular OAuth scopes](https://developers.zoom.us/docs/integrations/oauth-scopes-granular/) for Phone. Server-to-Server apps use the `:admin` suffix. Choose a profile based on what you need:
+
+#### Full Admin (all tools work)
+
+```
+phone:read:admin
+phone:write:admin
+```
+
+These two legacy scopes grant read/write access to the entire Phone API. Simplest setup, maximum access.
+
+#### Read-Only (all list/get tools, no create/update/delete)
+
+Add only the `phone:read:*:admin` granular scopes for resources you want to query. Full list:
+
+<details>
+<summary>All read-only scopes (click to expand)</summary>
+
+```
+phone:read:list_auto_receptionists:admin
+phone:read:auto_receptionist:admin
+phone:read:auto_receptionist_setting:admin
+phone:read:auto_receptionist_call_handling_setting:admin
+phone:read:auto_receptionist_policy:admin
+phone:read:auto_receptionist_ivr:admin
+phone:read:list_call_queues:admin
+phone:read:call_queue:admin
+phone:read:call_queue_setting:admin
+phone:read:call_queue_call_handling_setting:admin
+phone:read:call_queue_policy:admin
+phone:read:list_call_queue_members:admin
+phone:read:list_call_queue_recordings:admin
+phone:read:call_queue_custom_group:admin
+phone:read:list_audios:admin
+phone:read:audio:admin
+phone:read:list_users:admin
+phone:read:user:admin
+phone:read:user_call_handling_setting:admin
+phone:read:user_policy:admin
+phone:read:user_setting:admin
+phone:read:list_numbers:admin
+phone:read:numbers:admin
+phone:read:list_calling_plans:admin
+phone:read:list_voicemails:admin
+phone:read:voicemail:admin
+phone:read:list_call_logs:admin
+phone:read:call_log:admin
+phone:read:list_devices:admin
+phone:read:device:admin
+phone:read:list_sites:admin
+phone:read:site:admin
+phone:read:site_setting:admin
+phone:read:common_area:admin
+phone:read:list_common_area_settings:admin
+phone:read:common_area_call_handling_setting:admin
+phone:read:list_routing_rules:admin
+phone:read:routing_rule:admin
+phone:read:list_shared_line_groups:admin
+phone:read:shared_line_group:admin
+phone:read:shared_line_group_setting:admin
+phone:read:shared_line_group_call_handling_setting:admin
+phone:read:shared_line_group_policy:admin
+phone:read:list_sms_sessions:admin
+phone:read:sms_session:admin
+phone:read:sms_message:admin
+phone:read:call_charges:admin
+phone:read:fax_charges:admin
+phone:read:operation_logs:admin
+phone:read:sms_charges:admin
+```
+
+</details>
+
+#### Call Routing Admin (manage call flow, read-only on users/devices/billing)
+
+Write access to auto receptionists, call queues, audio library, common areas, routing rules, and shared line groups. Read-only on everything else. Useful for a team that manages IVR and call routing but shouldn't touch user provisioning or billing.
+
+<details>
+<summary>Scopes for this profile (click to expand)</summary>
+
+```
+# Read + write: call routing resources
+phone:read:auto_receptionist:admin
+phone:write:auto_receptionist:admin
+phone:read:auto_receptionist_setting:admin
+phone:write:auto_receptionist_setting:admin
+phone:delete:auto_receptionist_setting:admin
+phone:read:auto_receptionist_call_handling_setting:admin
+phone:update:auto_receptionist_call_handling_setting:admin
+phone:read:auto_receptionist_policy:admin
+phone:write:auto_receptionist_policy:admin
+phone:update:auto_receptionist_policy:admin
+phone:read:auto_receptionist_ivr:admin
+phone:update:auto_receptionist_ivr:admin
+phone:write:auto_receptionist_number:admin
+phone:delete:auto_receptionist_number:admin
+phone:read:list_auto_receptionists:admin
+
+phone:read:list_call_queues:admin
+phone:read:call_queue:admin
+phone:update:call_queue:admin
+phone:write:call_queue:admin
+phone:delete:call_queue:admin
+phone:read:call_queue_setting:admin
+phone:write:call_queue_setting:admin
+phone:update:call_queue_setting:admin
+phone:delete:call_queue_setting:admin
+phone:read:call_queue_call_handling_setting:admin
+phone:update:call_queue_call_handling_setting:admin
+phone:read:call_queue_policy:admin
+phone:write:call_queue_policy:admin
+phone:update:call_queue_policy:admin
+phone:read:list_call_queue_members:admin
+phone:write:call_queue_member:admin
+phone:delete:call_queue_member:admin
+phone:read:list_call_queue_recordings:admin
+phone:read:call_queue_custom_group:admin
+phone:write:call_queue_custom_group:admin
+phone:update:call_queue_custom_group:admin
+phone:delete:call_queue_custom_group:admin
+phone:write:call_queue_number:admin
+phone:delete:call_queue_number:admin
+
+phone:read:list_audios:admin
+phone:read:audio:admin
+phone:write:audio:admin
+phone:update:audio:admin
+phone:delete:audio:admin
+phone:write:batch_audios:admin
+
+phone:read:common_area:admin
+phone:write:common_area:admin
+phone:update:common_area:admin
+phone:delete:common_area:admin
+phone:read:list_common_area_settings:admin
+phone:read:common_area_call_handling_setting:admin
+phone:update:common_area_call_handling_setting:admin
+
+phone:read:list_routing_rules:admin
+phone:read:routing_rule:admin
+phone:write:routing_rule:admin
+phone:update:routing_rule:admin
+phone:delete:routing_rule:admin
+
+phone:read:list_shared_line_groups:admin
+phone:read:shared_line_group:admin
+phone:write:shared_line_group:admin
+phone:update:shared_line_group:admin
+phone:delete:shared_line_group:admin
+phone:read:shared_line_group_setting:admin
+phone:write:shared_line_group_setting:admin
+phone:update:shared_line_group_setting:admin
+phone:delete:shared_line_group_setting:admin
+phone:read:shared_line_group_call_handling_setting:admin
+phone:update:shared_line_group_call_handling_setting:admin
+phone:read:shared_line_group_policy:admin
+phone:write:shared_line_group_policy:admin
+phone:update:shared_line_group_policy:admin
+phone:delete:shared_line_group_policy:admin
+phone:write:shared_line_member:admin
+phone:delete:shared_line_member:admin
+phone:write:shared_line_group_number:admin
+phone:delete:shared_line_group_number:admin
+
+# Read-only: everything else
+phone:read:list_users:admin
+phone:read:user:admin
+phone:read:user_call_handling_setting:admin
+phone:read:user_policy:admin
+phone:read:user_setting:admin
+phone:read:list_numbers:admin
+phone:read:numbers:admin
+phone:read:list_calling_plans:admin
+phone:read:list_voicemails:admin
+phone:read:voicemail:admin
+phone:read:list_call_logs:admin
+phone:read:call_log:admin
+phone:read:list_devices:admin
+phone:read:device:admin
+phone:read:list_sites:admin
+phone:read:site:admin
+phone:read:site_setting:admin
+phone:read:call_charges:admin
+phone:read:fax_charges:admin
+phone:read:operation_logs:admin
+phone:read:sms_charges:admin
+```
+
+</details>
 
 ## Tool Examples
 
