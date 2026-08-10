@@ -196,8 +196,11 @@ def register(
         ----------
         user_id
             The Zoom user ID or email address.
-        policy_type
-            The policy category to retrieve (e.g. ``outbound``, ``international_calling``).
+        policy_type: str
+            The policy category to retrieve. The Zoom Phone API uses specific
+            setting names as policy types. Known valid value: ``allow_emergency_calls``.
+            The Zoom API returns 400 for unrecognized values — this is an API
+            limitation, not a bug in this tool.
 
         Returns
         -------
