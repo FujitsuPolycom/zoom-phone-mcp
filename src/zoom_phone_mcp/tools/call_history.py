@@ -34,26 +34,27 @@ def register(mcp: Any, get_client, json_result, error_result) -> None:
                 params["to"] = to_date
             if next_page_token:
                 params["next_page_token"] = next_page_token
-            data = await client.get("/phone/call_history", params=params)
+            data = await client.get("/phone/call_logs", params=params)
             return json_result(data)
         except Exception as err:
             return error_result(err)
 
     @mcp.tool()
     async def get_call_history_detail(
-        call_history_uuid: str,
+        call_log_id: str,
     ) -> str:
-        """Retrieve detailed information for a single call history entry.
+        """Retrieve detailed information for a single call log entry.
 
         Args:
-            call_history_uuid: Unique identifier of the call history record.
+            call_log_id: The call_id of the call log entry (numeric ID from
+                the call_logs list response, not the UUID 'id' field).
 
         Returns:
             JSON string with the full call detail record.
         """
         try:
             client = get_client()
-            data = await client.get(f"/phone/call_history/{call_history_uuid}")
+            data = await client.get(f"/phone/call_logs/{call_log_id}")
             return json_result(data)
         except Exception as err:
             return error_result(err)
@@ -90,7 +91,7 @@ def register(mcp: Any, get_client, json_result, error_result) -> None:
             if next_page_token:
                 params["next_page_token"] = next_page_token
             data = await client.get(
-                f"/phone/users/{user_id}/call_history", params=params
+                f"/phone/users/{user_id}/call_logs", params=params
             )
             return json_result(data)
         except Exception as err:
@@ -121,7 +122,7 @@ def register(mcp: Any, get_client, json_result, error_result) -> None:
             if sync_token:
                 params["sync_token"] = sync_token
             data = await client.get(
-                f"/phone/users/{user_id}/call_history/sync", params=params
+                f"/phone/users/{user_id}/call_logs/sync", params=params
             )
             return json_result(data)
         except Exception as err:
@@ -147,7 +148,7 @@ def register(mcp: Any, get_client, json_result, error_result) -> None:
         try:
             client = get_client()
             data = await client.delete(
-                f"/phone/users/{user_id}/call_history/{call_log_id}"
+                f"/phone/users/{user_id}/call_logs/{call_log_id}"
             )
             return json_result(data)
         except Exception as err:
@@ -161,7 +162,7 @@ def register(mcp: Any, get_client, json_result, error_result) -> None:
         """Attach a client code to an existing call log entry.
 
         Client codes are used for billing, CRM lookups, or custom labeling
-        of call records. This PATCHes the call history record with the
+        of call records. This PATCHes the call log record with the
         provided code.
 
         Args:
@@ -175,7 +176,7 @@ def register(mcp: Any, get_client, json_result, error_result) -> None:
             client = get_client()
             body = {"client_code": client_code}
             data = await client.patch(
-                f"/phone/call_history/{call_log_id}/client_code", json=body
+                f"/phone/call_logs/{call_log_id}/client_code", json=body
             )
             return json_result(data)
         except Exception as err:
