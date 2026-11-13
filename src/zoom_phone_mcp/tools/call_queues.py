@@ -1,9 +1,14 @@
 """MCP tools for Zoom Phone call queues."""
 
+from __future__ import annotations
+
 from typing import Any
 
+from ..client import normalize_members_payload, normalize_phone_numbers
+
+
 def register(mcp: Any, get_client: Any, json_result: Any, error_result: Any) -> None:
-    """Register all call-queue MCP tools on the given Any instance."""
+    """Register all call-queue MCP tools on the given FastMCP instance."""
 
     @mcp.tool()
     async def list_call_queues(
@@ -112,11 +117,15 @@ def register(mcp: Any, get_client: Any, json_result: Any, error_result: Any) -> 
             return error_result(err)
 
     @mcp.tool()
-    async def add_queue_members(call_queue_id: str, members: list[str]) -> str:
-        """Add members (user IDs or extension IDs) to a call queue."""
+    async def add_queue_members(
+        call_queue_id: str,
+        members: list[str | dict[str, Any]] | None = None,
+        common_area_ids: list[str] | None = None,
+    ) -> str:
+        """Add members (user IDs/emails and/or common_area_ids) to a call queue."""
         try:
             client = get_client()
-            body: dict[str, Any] = {"members": members}
+            body = normalize_members_payload(members, common_area_ids)
             data = await client.post(
                 f"/phone/call_queues/{call_queue_id}/members", json=body
             )
@@ -257,12 +266,12 @@ def register(mcp: Any, get_client: Any, json_result: Any, error_result: Any) -> 
     @mcp.tool()
     async def assign_queue_phone_numbers(
         call_queue_id: str,
-        phone_numbers: list[str],
+        phone_numbers: list[str | dict[str, Any]],
     ) -> str:
-        """Assign phone numbers to a call queue."""
+        """Assign phone numbers (E.164 strings, phone number IDs, or dicts) to a call queue."""
         try:
             client = get_client()
-            body: dict[str, Any] = {"phone_numbers": phone_numbers}
+            body: dict[str, Any] = {"phone_numbers": normalize_phone_numbers(phone_numbers)}
             data = await client.post(
                 f"/phone/call_queues/{call_queue_id}/phone_numbers", json=body
             )
@@ -271,13 +280,17 @@ def register(mcp: Any, get_client: Any, json_result: Any, error_result: Any) -> 
             return error_result(err)
 
     @mcp.tool()
-    async def unassign_queue_phone_numbers(call_queue_id: str) -> str:
-        """Unassign all phone numbers from a call queue."""
+    async def unassign_queue_phone_numbers(
+        call_queue_id: str,
+        phone_number_id: str | None = None,
+    ) -> str:
+        """Unassign a specific phone number (or all phone numbers if phone_number_id is omitted) from a call queue."""
         try:
             client = get_client()
-            data = await client.delete(
-                f"/phone/call_queues/{call_queue_id}/phone_numbers"
-            )
+            path = f"/phone/call_queues/{call_queue_id}/phone_numbers"
+            if phone_number_id:
+                path = f"{path}/{phone_number_id}"
+            data = await client.delete(path)
             return json_result(data)
         except Exception as err:
             return error_result(err)

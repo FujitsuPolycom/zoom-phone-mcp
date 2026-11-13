@@ -15,7 +15,7 @@ def register(
     """Register Zoom Phone number management tools with the MCP server.
 
     Args:
-        mcp: The Any server instance to register tools on.
+        mcp: The FastMCP server instance to register tools on.
         get_client: Callable that returns a configured Zoom Phone API client.
         json_result: Callable that wraps data as a successful JSON result.
         error_result: Callable that wraps an error message as a JSON error result.

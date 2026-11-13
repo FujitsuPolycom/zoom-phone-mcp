@@ -65,26 +65,34 @@ def register(mcp: Any, get_client: Any, json_result: Any, error_result: Any) -> 
     @mcp.tool(
         description=(
             "Add a new deskphone device to the Zoom Phone account. "
-            "Requires a MAC address and device model. Optionally assign to a site, "
-            "user, or extension and set a provisioning template."
+            "Requires a MAC address and device model. Optionally specify display_name, "
+            "device_type (vendor), site, user/assigned_to, or extension."
         ),
     )
     async def add_device(
         mac_address: str,
         model: str,
+        display_name: str | None = None,
+        device_type: str | None = None,
         site_id: str | None = None,
         user_id: str | None = None,
+        assigned_to: str | None = None,
         extension_id: str | None = None,
+        assignee_extension_ids: list[str] | None = None,
         provision_template_id: str | None = None,
     ) -> str:
         """Create a new Zoom Phone device.
 
         Args:
             mac_address: MAC address of the physical deskphone.
-            model: Device model identifier (e.g. "Yealink-T54W").
+            model: Device model identifier (e.g. "Yealink-T54W" or "T54W").
+            display_name: Display name for the deskphone (defaults to "{model}-{mac_address}").
+            device_type: Device manufacturer/vendor type (e.g. "Yealink", "Poly", "Cisco").
             site_id: ID of the site to assign the device to.
-            user_id: ID of the user to assign the device to.
+            user_id: ID or email of the user to assign the device to (alias for assigned_to).
+            assigned_to: Extension ID or user ID/email to assign the device to.
             extension_id: ID of the extension to assign the device to.
+            assignee_extension_ids: List of extension IDs to assign the device to.
             provision_template_id: Provisioning template ID for the device.
 
         Returns:
@@ -93,15 +101,21 @@ def register(mcp: Any, get_client: Any, json_result: Any, error_result: Any) -> 
         try:
             client = get_client()
             body: dict[str, Any] = {
+                "display_name": display_name or f"{model}-{mac_address}",
                 "mac_address": mac_address,
                 "model": model,
             }
+            if device_type is not None:
+                body["type"] = device_type
             if site_id is not None:
                 body["site_id"] = site_id
-            if user_id is not None:
-                body["user_id"] = user_id
-            if extension_id is not None:
-                body["extension_id"] = extension_id
+            resolved_assigned_to = assigned_to if assigned_to is not None else user_id
+            if resolved_assigned_to is not None:
+                body["assigned_to"] = resolved_assigned_to
+            if assignee_extension_ids is not None:
+                body["assignee_extension_ids"] = assignee_extension_ids
+            elif extension_id is not None:
+                body["assignee_extension_ids"] = [extension_id]
             if provision_template_id is not None:
                 body["provision_template_id"] = provision_template_id
             data = await client.post("/phone/devices", json=body)
@@ -113,7 +127,7 @@ def register(mcp: Any, get_client: Any, json_result: Any, error_result: Any) -> 
 
     @mcp.tool(
         description=(
-            "Update an existing Zoom Phone device's MAC address or name. "
+            "Update an existing Zoom Phone device's display name, MAC address, or assignment. "
             "Only the provided fields are updated (PATCH semantics)."
         ),
     )
@@ -121,13 +135,21 @@ def register(mcp: Any, get_client: Any, json_result: Any, error_result: Any) -> 
         device_id: str,
         mac_address: str | None = None,
         name: str | None = None,
+        display_name: str | None = None,
+        assigned_to: str | None = None,
+        site_id: str | None = None,
+        provision_template_id: str | None = None,
     ) -> str:
         """Update a Zoom Phone device's attributes.
 
         Args:
             device_id: The unique identifier of the device to update.
             mac_address: New MAC address for the device.
-            name: New display name for the device.
+            name: Alias for display_name.
+            display_name: New display name for the device.
+            assigned_to: User ID, email, or extension ID to assign the device to.
+            site_id: New site ID for the device.
+            provision_template_id: Provisioning template ID.
 
         Returns:
             JSON string with the updated device details.
@@ -137,8 +159,15 @@ def register(mcp: Any, get_client: Any, json_result: Any, error_result: Any) -> 
             body: dict[str, Any] = {}
             if mac_address is not None:
                 body["mac_address"] = mac_address
-            if name is not None:
-                body["name"] = name
+            resolved_name = display_name if display_name is not None else name
+            if resolved_name is not None:
+                body["display_name"] = resolved_name
+            if assigned_to is not None:
+                body["assigned_to"] = assigned_to
+            if site_id is not None:
+                body["site_id"] = site_id
+            if provision_template_id is not None:
+                body["provision_template_id"] = provision_template_id
             data = await client.patch(f"/phone/devices/{device_id}", json=body)
             return json_result(data)
         except Exception as err:

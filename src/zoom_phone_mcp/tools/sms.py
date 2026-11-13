@@ -8,10 +8,30 @@ def register(mcp: Any, get_client, json_result, error_result):
     # ── SMS ───────────────────────────────────────────────────────────────
 
     @mcp.tool(description="Send an SMS message from a Zoom Phone number.")
-    async def send_sms(to_number: str, from_number: str, message: str) -> str:
-        """Send an SMS message. The from_number must be assigned to a user with SMS capability."""
+    async def send_sms(
+        to_number: str | list[str],
+        from_number: str,
+        message: str,
+        sender_user_id: str | None = None,
+    ) -> str:
+        """Send an SMS message via POST /phone/sms/messages.
+
+        Args:
+            to_number: Recipient phone number in E.164 format (or list of recipient E.164 numbers).
+            from_number: Sender's SMS-capable Zoom Phone number in E.164 format.
+            message: The text message body to send.
+            sender_user_id: Optional Zoom user ID of the sender owning from_number.
+        """
         try:
-            body = {"to_number": to_number, "from_number": from_number, "message": message}
+            recipients = [to_number] if isinstance(to_number, str) else list(to_number)
+            sender: dict[str, str] = {"phone_number": from_number}
+            if sender_user_id:
+                sender["user_id"] = sender_user_id
+            body: dict[str, Any] = {
+                "sender": sender,
+                "to_members": [{"phone_number": num} for num in recipients],
+                "message": message,
+            }
             data = await client().post("/phone/sms/messages", json=body)
             return json_result(data)
         except Exception as e:

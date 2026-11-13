@@ -27,7 +27,15 @@ def register(mcp: Any, get_client, json_result, error_result):
             return error_result(e)
 
     @mcp.tool(description="Create a new Zoom Phone site.")
-    async def create_site(name: str, extension_number: int | None = None, description: str | None = None) -> str:
+    async def create_site(
+        name: str,
+        extension_number: int | None = None,
+        description: str | None = None,
+        auto_receptionist_name: str | None = None,
+        default_emergency_address: dict[str, Any] | None = None,
+        short_extension: dict[str, Any] | int | None = None,
+        site_code: int | None = None,
+    ) -> str:
         """Create a new phone site."""
         try:
             body: dict[str, Any] = {"name": name}
@@ -35,6 +43,18 @@ def register(mcp: Any, get_client, json_result, error_result):
                 body["extension_number"] = extension_number
             if description:
                 body["description"] = description
+            if auto_receptionist_name is not None:
+                body["auto_receptionist_name"] = auto_receptionist_name
+            if default_emergency_address is not None:
+                body["default_emergency_address"] = default_emergency_address
+            if short_extension is not None:
+                body["short_extension"] = (
+                    {"length": short_extension}
+                    if isinstance(short_extension, int)
+                    else short_extension
+                )
+            if site_code is not None:
+                body["site_code"] = site_code
             data = await client().post("/phone/sites", json=body)
             return json_result(data)
         except Exception as e:

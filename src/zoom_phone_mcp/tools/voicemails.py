@@ -8,7 +8,7 @@ def register(mcp, get_client, json_result, error_result):
     """Register all voicemail-related MCP tools.
 
     Args:
-        mcp: Any server instance.
+        mcp: FastMCP server instance.
         get_client: Callable returning the active ZoomPhoneClient.
         json_result: Callable serializing data to a JSON string.
         error_result: Callable formatting an exception as a JSON string.
@@ -118,18 +118,21 @@ def register(mcp, get_client, json_result, error_result):
     async def update_voicemail_read_status(
         voicemail_id: str,
         is_read: bool = True,
+        status: str | None = None,
     ) -> str:
         """Mark a voicemail as read or unread.
 
         Args:
             voicemail_id: The unique identifier of the voicemail.
-            is_read: True to mark as read, False to mark as unread (default True).
+            is_read: True to mark as 'read', False to mark as 'unread' (default True).
+            status: Explicit status ('read' or 'unread'); overrides is_read if provided.
 
         Returns:
             JSON string confirming the updated read status.
         """
         client: ZoomPhoneClient = get_client()
-        body: dict[str, Any] = {"is_read": is_read}
+        resolved_status = status if status is not None else ("read" if is_read else "unread")
+        body: dict[str, Any] = {"status": resolved_status}
         try:
             data = await client.patch(
                 f"/phone/voice_mails/{voicemail_id}", json=body

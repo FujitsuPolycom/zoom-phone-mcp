@@ -27,10 +27,14 @@ def register(mcp: Any, get_client, json_result, error_result):
             return error_result(e)
 
     @mcp.tool(description="Create a new Zoom Phone directory backup routing rule.")
-    async def create_routing_rule(name: str, description: str | None = None, routing_rule: dict = {}) -> str:
+    async def create_routing_rule(
+        name: str,
+        description: str | None = None,
+        routing_rule: dict[str, Any] | None = None,
+    ) -> str:
         """Create a new directory backup routing rule."""
         try:
-            body: dict[str, Any] = {"name": name, "routing_rule": routing_rule}
+            body: dict[str, Any] = {"name": name, "routing_rule": routing_rule or {}}
             if description:
                 body["description"] = description
             data = await client().post("/phone/routing_rules", json=body)

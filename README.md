@@ -58,7 +58,14 @@ export ZOOM_ACCOUNT_ID="your_account_id"
 export ZOOM_CLIENT_ID="your_client_id"
 export ZOOM_CLIENT_SECRET="your_client_secret"
 
-python -m zoom_phone_mcp.server
+# Streamable HTTP (default on 0.0.0.0:8767)
+zoom-phone-mcp
+
+# Or stdio mode (for local MCP clients)
+zoom-phone-mcp --transport stdio
+
+# Or read-only mode (blocks all POST/PATCH/PUT/DELETE requests)
+zoom-phone-mcp --read-only
 ```
 
 ### Option 3: Development

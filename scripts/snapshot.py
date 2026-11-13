@@ -1,8 +1,11 @@
-import httpx, json, os, sys
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
+import json
+import os
+from pathlib import Path
+import httpx
 
 client = httpx.Client(timeout=60)
-base = "http://localhost:8767/mcp"
+base = os.environ.get("ZOOM_PHONE_MCP_URL", "http://localhost:8767/mcp")
 headers = {"Content-Type": "application/json", "Accept": "application/json, text/event-stream"}
 
 resp = client.post(base, headers=headers, json={
@@ -14,7 +17,9 @@ sid = resp.headers.get("mcp-session-id", "")
 headers["MCP-Session-Id"] = sid
 client.post(base, headers=headers, json={"jsonrpc": "2.0", "method": "notifications/initialized"})
 
-def call_tool(name, args={}):
+def call_tool(name, args=None):
+    if args is None:
+        args = {}
     try:
         resp = client.post(base, headers=headers, json={
             "jsonrpc": "2.0", "method": "tools/call",
@@ -31,7 +36,7 @@ def call_tool(name, args={}):
                             if obj.get("error"):
                                 return {"status": "error", "message": obj.get("message", "")[:500]}
                             return {"status": "ok", "data": obj}
-                        except:
+                        except Exception:
                             if "coroutine" in text:
                                 return {"status": "bug", "message": "coroutine not awaited"}
                             return {"status": "ok", "data": text[:500]}
@@ -41,15 +46,16 @@ def call_tool(name, args={}):
     except Exception as e:
         return {"status": "exception", "message": str(e)[:500]}
 
+now_utc = datetime.now(timezone.utc)
 snapshot = {
-    "timestamp": datetime.utcnow().isoformat() + "Z",
+    "timestamp": now_utc.strftime("%Y-%m-%dT%H:%M:%SZ"),
     "tool_results": {},
     "errors": [],
 }
 
 # Date range for report tools (last 30 days)
-today = datetime.utcnow().strftime("%Y-%m-%d")
-month_ago = (datetime.utcnow() - timedelta(days=30)).strftime("%Y-%m-%d")
+today = now_utc.strftime("%Y-%m-%d")
+month_ago = (now_utc - timedelta(days=30)).strftime("%Y-%m-%d")
 
 # ── PHASE 1: List endpoints (no required args) ──
 print("PHASE 1: List endpoints")
@@ -211,8 +217,7 @@ print("-" * 50)
 
 # Get user policies for first few users
 users = collected.get("list_phone_users", [])
-policy_types = ["outbound", "international", "sms", "voicemail", "recording", 
-                "call_forwarding", "delegation", "auto_call_recording"]
+policy_types = ["allow_emergency_calls"]
 
 for user in users[:5]:  # First 5 users
     user_id = user.get("id")
@@ -239,11 +244,12 @@ print(f"  Total errors: {total_err + len(snapshot['errors'])}")
 print(f"  Unique data keys: {len(snapshot['tool_results'])}")
 
 # Save snapshot
-outpath = "/root/workspace/zoom-phone-mcp/snapshots"
-os.makedirs(outpath, exist_ok=True)
-fname = f"zoom_phone_snapshot_{datetime.utcnow().strftime('%Y%m%d_%H%M%S')}.json"
-fpath = os.path.join(outpath, fname)
-with open(fpath, "w") as f:
+default_outpath = Path(__file__).resolve().parent.parent / "snapshots"
+outpath = Path(os.environ.get("SNAPSHOT_OUTPUT_DIR", str(default_outpath)))
+outpath.mkdir(parents=True, exist_ok=True)
+fname = f"zoom_phone_snapshot_{now_utc.strftime('%Y%m%d_%H%M%S')}.json"
+fpath = outpath / fname
+with open(fpath, "w", encoding="utf-8") as f:
     json.dump(snapshot, f, indent=2, default=str)
 print(f"\n  Saved to: {fpath}")
 print(f"  File size: {os.path.getsize(fpath) / 1024:.1f} KB")

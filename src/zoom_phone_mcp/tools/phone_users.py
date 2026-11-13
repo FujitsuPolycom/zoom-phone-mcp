@@ -4,9 +4,12 @@ Registers 10 tools for listing, retrieving, updating, and configuring
 Zoom Phone users via the Zoom Phone REST API.
 """
 
+from __future__ import annotations
+
 from typing import Any, Callable
 
-from ..client import ZoomPhoneClient, ZoomAPIError
+from ..client import ZoomAPIError, ZoomPhoneClient, normalize_phone_numbers
+
 
 def register(
     mcp: Any,
@@ -19,7 +22,7 @@ def register(
     Parameters
     ----------
     mcp
-        The Any server instance.
+        The FastMCP server instance.
     get_client
         Callable returning an initialised ``ZoomPhoneClient``.
     json_result
@@ -304,19 +307,20 @@ def register(
 
     # ── 10. assign_phone_number_to_user ──────────────────────────────────
 
-    @mcp.tool(description="Assign a phone number to a Zoom Phone user.")
+    @mcp.tool(description="Assign one or more phone numbers to a Zoom Phone user.")
     async def assign_phone_number_to_user(
         user_id: str,
-        phone_number: str,
+        phone_number: str | dict[str, Any] | list[str | dict[str, Any]],
     ) -> str:
-        """Assign a phone number to a phone user.
+        """Assign phone number(s) to a phone user.
 
         Parameters
         ----------
         user_id
             The Zoom user ID or email address.
         phone_number
-            The phone number to assign to the user.
+            Phone number(s) to assign — can be an E.164 string (e.g. '+12058945717'),
+            a phone number ID, a dict with 'id'/'number', or a list of those.
 
         Returns
         -------
@@ -325,7 +329,7 @@ def register(
         """
         try:
             client = get_client()
-            body: dict[str, Any] = {"phone_number": phone_number}
+            body: dict[str, Any] = {"phone_numbers": normalize_phone_numbers(phone_number)}
             data = await client.post(
                 f"/phone/users/{user_id}/phone_numbers",
                 json=body,

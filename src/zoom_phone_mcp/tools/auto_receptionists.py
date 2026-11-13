@@ -9,13 +9,11 @@ from __future__ import annotations
 
 from typing import Any
 
-try:
-    from typing import NotRequired, TypedDict
-except ImportError:  # Python < 3.11
-    from typing_extensions import NotRequired, TypedDict
+from ..client import normalize_phone_numbers
 
-def register(mcp, get_client, json_result, error_result):
-    """Register all auto receptionist MCP tools on the Any instance."""
+
+def register(mcp: Any, get_client: Any, json_result: Any, error_result: Any) -> None:
+    """Register all auto receptionist MCP tools on the FastMCP instance."""
 
     # ------------------------------------------------------------------
     # 1. list_auto_receptionists
@@ -322,12 +320,16 @@ def register(mcp, get_client, json_result, error_result):
     @mcp.tool()
     async def assign_ar_phone_numbers(
         auto_receptionist_id: str,
-        phone_numbers: list[str],
+        phone_numbers: list[str | dict[str, Any]],
     ) -> str:
-        """Assign phone numbers to an auto receptionist."""
+        """Assign phone numbers to an auto receptionist.
+
+        Each item in ``phone_numbers`` can be an E.164 number string (e.g.
+        '+12058945717'), a phone number ID string, or a dict with 'id'/'number'.
+        """
         try:
             client = get_client()
-            body = {"phone_numbers": phone_numbers}
+            body = {"phone_numbers": normalize_phone_numbers(phone_numbers)}
             data = await client.post(
                 f"/phone/auto_receptionists/{auto_receptionist_id}/phone_numbers",
                 json=body,
@@ -340,13 +342,17 @@ def register(mcp, get_client, json_result, error_result):
     # 17. unassign_ar_phone_numbers
     # ------------------------------------------------------------------
     @mcp.tool()
-    async def unassign_ar_phone_numbers(auto_receptionist_id: str) -> str:
-        """Unassign ALL phone numbers from an auto receptionist."""
+    async def unassign_ar_phone_numbers(
+        auto_receptionist_id: str,
+        phone_number_id: str | None = None,
+    ) -> str:
+        """Unassign a specific phone number (or all phone numbers if phone_number_id is omitted) from an auto receptionist."""
         try:
             client = get_client()
-            data = await client.delete(
-                f"/phone/auto_receptionists/{auto_receptionist_id}/phone_numbers"
-            )
+            path = f"/phone/auto_receptionists/{auto_receptionist_id}/phone_numbers"
+            if phone_number_id:
+                path = f"{path}/{phone_number_id}"
+            data = await client.delete(path)
             return json_result(data)
         except Exception as err:
             return error_result(err)

@@ -27,26 +27,57 @@ def register(mcp: Any, get_client, json_result, error_result):
             return error_result(e)
 
     @mcp.tool(description="Create a new Zoom Phone common area (e.g. lobby phone).")
-    async def create_common_area(name: str, extension_number: int | None = None, site_id: str | None = None) -> str:
-        """Create a new common area."""
+    async def create_common_area(
+        name: str | None = None,
+        extension_number: int | None = None,
+        site_id: str | None = None,
+        display_name: str | None = None,
+        timezone: str | None = None,
+        country_iso_code: str | None = None,
+    ) -> str:
+        """Create a new common area. Accepts display_name (or name alias)."""
         try:
-            body: dict[str, Any] = {"name": name}
+            resolved_name = display_name if display_name is not None else name
+            if not resolved_name:
+                raise ValueError("Either display_name or name is required to create a common area.")
+            body: dict[str, Any] = {"display_name": resolved_name}
             if extension_number is not None:
                 body["extension_number"] = extension_number
             if site_id:
                 body["site_id"] = site_id
+            if timezone:
+                body["timezone"] = timezone
+            if country_iso_code:
+                body["country_iso_code"] = country_iso_code
             data = await client().post("/phone/common_areas", json=body)
             return json_result(data)
         except Exception as e:
             return error_result(e)
 
     @mcp.tool(description="Update a Zoom Phone common area's details.")
-    async def update_common_area(common_area_id: str, name: str | None = None) -> str:
-        """Update a common area's name."""
+    async def update_common_area(
+        common_area_id: str,
+        name: str | None = None,
+        display_name: str | None = None,
+        extension_number: int | None = None,
+        site_id: str | None = None,
+        timezone: str | None = None,
+        country_iso_code: str | None = None,
+    ) -> str:
+        """Update a common area's display_name (or name alias), extension_number, site_id, or timezone."""
         try:
             body: dict[str, Any] = {}
-            if name is not None:
-                body["name"] = name
+            resolved_name = display_name if display_name is not None else name
+            if resolved_name is not None:
+                body["display_name"] = resolved_name
+            if extension_number is not None:
+                body["extension_number"] = extension_number
+            if site_id is not None:
+                body["site_id"] = site_id
+            if timezone is not None:
+                body["timezone"] = timezone
+            if country_iso_code is not None:
+                body["country_iso_code"] = country_iso_code
             data = await client().patch(f"/phone/common_areas/{common_area_id}", json=body)
             return json_result(data)
         except Exception as e:
